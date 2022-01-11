@@ -1,4 +1,5 @@
 ﻿#NoEnv
+#NoTrayIcon
 #SingleInstance Force
 
 界面:
@@ -50,7 +51,7 @@
   Gui Add, Button, x648 y526 w270 h50 v导出候选效果 +Disabled, 导出候选效果
   
   GuiControl, Focus, 载入图片
-  Gui Show, w940 h630, PaddleOCR 参数调优器 ver. 1.4.1
+  Gui Show, w940 h630, PaddleOCR 参数调优器 ver. 1.4.2
   
   OnMessage(0x6, "WM_ACTIVATE")     ; 监视窗口是否激活
   OnMessage(0x200, "WM_MouseMove")  ; 监视鼠标移动消息
