@@ -8,7 +8,7 @@ PaddleOCR 参数调优器
 这样我们就能为每个单独场景设置最佳参数，获得最佳识别效果。  
   <br>
 # 下载  
-**[点击此处]()**  
+**[点击此处](https://github.com/telppa/PaddleOCR-parameter-tuner/releases/download/v20220111/PaddleOCR-parameter-tuner.zip)**  
   <br>
 # 用法  
 调节参数并观察识别效果。  
