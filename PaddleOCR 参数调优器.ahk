@@ -50,7 +50,7 @@
   Gui Add, Button, x648 y526 w270 h50 v导出候选效果 +Disabled, 导出候选效果
   
   GuiControl, Focus, 载入图片
-  Gui Show, w940 h630, PaddleOCR 参数调优器 ver. 1.4
+  Gui Show, w940 h630, PaddleOCR 参数调优器 ver. 1.4.1
   
   OnMessage(0x6, "WM_ACTIVATE")     ; 监视窗口是否激活
   OnMessage(0x200, "WM_MouseMove")  ; 监视鼠标移动消息
@@ -177,7 +177,7 @@ Button导出候选效果:
     导出文本 := "图片 := """ chooseFile """`r`n"
     导出文本 .= "参数 := {" SubStr(导出参数, 1, -2) "}`r`n"
     导出文本 .= "MsgBox, % PaddleOCR(图片, 参数)`r`n`r`n"
-    导出文本 .= "#Include %A_LineFile%\..\..\PaddleOCR\PaddleOCR.ahk"
+    导出文本 .= "#Include %A_LineFile%\..\PaddleOCR\PaddleOCR.ahk"
     
     FileDelete, 效果%效果编号%.ahk
     FileAppend, %导出文本%, 效果%效果编号%.ahk, UTF-8
