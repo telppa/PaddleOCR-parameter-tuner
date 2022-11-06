@@ -1,9 +1,10 @@
 ﻿/*
 2022.11.06
   去掉托盘图标。
+  更改导出提示。
   耗时计算更加准确。
   图片显示不会超出图片框。
-  版本号 1.4.5
+  版本号 1.4.6
 */
 #NoEnv
 #NoTrayIcon
@@ -58,7 +59,7 @@
   Gui Add, Button, x648 y526 w270 h50 v导出候选效果 +Disabled, 导出候选效果
   
   GuiControl, Focus, 载入图片
-  Gui Show, w940 h630, PaddleOCR 参数调优器 ver. 1.4.5
+  Gui Show, w940 h630, PaddleOCR 参数调优器 ver. 1.4.6
   
   OnMessage(0x6, "WM_ACTIVATE")     ; 监视窗口是否激活
   OnMessage(0x200, "WM_MouseMove")  ; 监视鼠标移动消息
@@ -229,7 +230,7 @@ Button导出候选效果:
     FileAppend, %导出文本%, 效果%效果编号%.ahk, UTF-8
     
     Gui +OwnDialogs
-    MsgBox 0x40, , 导出成功！`n`n可拖拽 “效果%效果编号%.ahk” 至 “PaddleOCR 参数调优器.exe” 上运行。
+    MsgBox 0x40, , “效果%效果编号%.ahk” 导出成功！
     
     Run, explorer.exe /select`, "效果%效果编号%.ahk"
   }
