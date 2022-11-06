@@ -1,4 +1,11 @@
-﻿#NoEnv
+﻿/*
+2022.11.06
+  去掉托盘图标。
+  耗时计算更加准确。
+  图片显示不会超出图片框。
+  版本号 1.4.5
+*/
+#NoEnv
 #NoTrayIcon
 #SingleInstance Force
 
@@ -14,7 +21,7 @@
   Gui Add, Edit, x328 y32 w270 h260 vedit1, 1. “载入图片”`n2. “开始识别”`n3. “导出效果”
   
   Gui Add, GroupBox, x632 y8 w300 h300, 候选效果
-  Gui Add, Picture, x648 y32 w270 h260 vpic2 AltSubmit, HBITMAP:%初始图片%  ; 此处自动释放了图片
+  Gui Add, Picture, x648 y32 w270 h260 vpic2 AltSubmit, HBITMAP:*%初始图片%  ; 避免被自动释放，留着给识别器初始化用
   
   Gui Add, GroupBox, x8 y320 w924 h300, 参数调节
   Gui Add, CheckBox, x24 y344 w120 h23 vfast_model, fast model
@@ -51,7 +58,7 @@
   Gui Add, Button, x648 y526 w270 h50 v导出候选效果 +Disabled, 导出候选效果
   
   GuiControl, Focus, 载入图片
-  Gui Show, w940 h630, PaddleOCR 参数调优器 ver. 1.4.2
+  Gui Show, w940 h630, PaddleOCR 参数调优器 ver. 1.4.5
   
   OnMessage(0x6, "WM_ACTIVATE")     ; 监视窗口是否激活
   OnMessage(0x200, "WM_MouseMove")  ; 监视鼠标移动消息
@@ -63,7 +70,14 @@ Button载入图片:
   FileSelectFile, chooseFile, 3, , 选择待识别图片, 图片 (*.bmp; *.png; *.tif; *.tiff; *.jpg; *.jpeg; *.gif; *.dib; *.rle; *.jpe; *.jfif)
   if (chooseFile)
   {
-    GuiControl, , pic1, *w270 *h-1 %chooseFile%
+    buf := ImagePutBuffer(chooseFile)  ; buf 变量清空时会自动释放资源
+    ratio := buf.width / buf.height
+    
+    if (ratio>=1)
+      GuiControl, , pic1, *w270 *h-1 %chooseFile%
+    else
+      GuiControl, , pic1, *w-1 *h260 %chooseFile%
+    
     pic1Path := chooseFile
     
     GuiControl, Enable, 开始识别
@@ -81,29 +95,55 @@ Button开始识别:
     return
   }
   
-  GuiControl, , edit1, 识别中...
-  startTime    := A_TickCount
-  当前参数     := { model:                        fast_model=1 ? "fast" : "server"
-                  , get_all_info:                 0
-                  , cpu_math_library_num_threads: cpu_math_library_num_threads
-                  , use_mkldnn:                   use_mkldnn
-                  , max_side_len:                 max_side_len
-                  , det_db_thresh:                det_db_thresh
-                  , det_db_box_thresh:            det_db_box_thresh
-                  , det_db_unclip_ratio:          det_db_unclip_ratio
-                  , use_polygon_score:            use_polygon_score
-                  , use_angle_cls:                use_angle_cls
-                  , cls_thresh:                   cls_thresh
-                  , visualize:                    1
-                  , use_tensorrt:                 use_tensorrt
-                  , use_fp16:                     use_fp16}
-  当前识别结果 := PaddleOCR(chooseFile, 当前参数)
+  当前参数 := { model:                        fast_model=1 ? "fast" : "server"
+              , get_all_info:                 0
+              , cpu_math_library_num_threads: cpu_math_library_num_threads
+              , use_mkldnn:                   use_mkldnn
+              , max_side_len:                 max_side_len
+              , det_db_thresh:                det_db_thresh
+              , det_db_box_thresh:            det_db_box_thresh
+              , det_db_unclip_ratio:          det_db_unclip_ratio
+              , use_polygon_score:            use_polygon_score
+              , use_angle_cls:                use_angle_cls
+              , cls_thresh:                   cls_thresh
+              , visualize:                    1
+              , use_tensorrt:                 use_tensorrt
+              , use_fp16:                     use_fp16}
+  
+  ; 将当前参数文本化
+  当前参数文本 := ""
+  for k, v in 当前参数
+    当前参数文本 .= k v "`n"
+  
+  ; 任何参数改变都会导致模型初始化，因此计算耗时应该排除初始化所用时间
+  loop 2
+  {
+    if (pre_当前参数文本 = 当前参数文本)
+    {
+      GuiControl, , edit1, 识别中...
+      Sleep 50  ; 这里必须有个延时，否则速度太快会导致文字提示显示不出来
+      startTime        := A_TickCount
+      当前识别结果     := PaddleOCR(chooseFile, 当前参数)
+      break
+    }
+    else
+    {
+      GuiControl, , edit1, 初始化中...
+      Sleep 50
+      pre_当前参数文本 := 当前参数文本
+      当前识别结果     := PaddleOCR(初始图片, 当前参数)
+    }
+  }
   GuiControl, , edit1, % "耗时 " A_TickCount-startTime " ms`n--------`n" 当前识别结果
   
   ; 识别成功
   if (FileExist("ocr_vis.png"))
   {
-    GuiControl, , pic1, *w270 *h-1 ocr_vis.png
+    if (ratio>=1)
+      GuiControl, , pic1, *w270 *h-1 ocr_vis.png
+    else
+      GuiControl, , pic1, *w-1 *h260 ocr_vis.png
+    
     pic1Path   := "ocr_vis.png"
     
     GuiControl, Enable, 导出当前效果
@@ -140,7 +180,12 @@ Button存为候选:
     候选参数     := 当前参数.Clone()
     候选识别结果 := 当前识别结果
     FileCopy, %pic1Path%, ocr_vis2.png, 1
-    GuiControl, , pic2, *w270 *h-1 ocr_vis2.png
+    
+    if (ratio>=1)
+      GuiControl, , pic2, *w270 *h-1 ocr_vis2.png
+    else
+      GuiControl, , pic2, *w-1 *h260 ocr_vis2.png
+    
     pic2Path     := "ocr_vis2.png"
     
     GuiControl, Enable, 导出候选效果
